@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Osu Corner Store</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#15131A;
+    --panel:#1E1B24;
+    --panel-hover:#252130;
+    --line:#332F3D;
+    --brass:#C6A467;
+    --brass-dim:#8C7345;
+    --emerald:#3E8368;
+    --emerald-dim:#2E6A52;
+    --text:#EFEAE2;
+    --muted:#948C9C;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding-bottom:90px;
+  }
+
+  header{
+    padding:36px 20px 24px;
+    border-bottom:1px solid var(--line);
+  }
+  .store-name{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:32px;
+    letter-spacing:-0.01em;
+    margin:0;
+    color:var(--text);
+  }
+  .rule{
+    width:52px;
+    height:3px;
+    background:linear-gradient(90deg, var(--brass) 0%, #C4633F 35%, #2E7D8C 70%, #5B4A9E 100%);
+    border-radius:2px;
+    margin:12px 0 10px;
+  }
+  .tagline{
+    margin:0;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  main{
+    max-width:640px;
+    margin:0 auto;
+    padding:24px 20px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    transition:border-color .15s ease;
+  }
+  .card:hover{ border-color:var(--brass-dim); }
+  .thumb{
+    width:100%;
+    aspect-ratio:1/1;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:32px;
+    border:1px solid var(--line);
+  }
+  .card h3{
+    font-size:14px;
+    margin:0;
+    font-weight:500;
+    line-height:1.35;
+    color:var(--text);
+  }
+  .price{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:16px;
+    color:var(--brass);
+  }
+  .qty-row{
+    margin-top:auto;
+  }
+  .stepper{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border:1px solid var(--line);
+    border-radius:5px;
+    overflow:hidden;
+    width:100%;
+  }
+  .stepper button{
+    width:32px;
+    height:32px;
+    border:none;
+    background:transparent;
+    font-size:16px;
+    cursor:pointer;
+    color:var(--text);
+  }
+  .stepper button:hover{background:var(--panel-hover);}
+  .stepper span{
+    font-weight:600;
+    font-size:14px;
+    color:var(--text);
+  }
+  .add-btn{
+    border:1px solid var(--brass-dim);
+    background:transparent;
+    color:var(--brass);
+    font-weight:600;
+    font-size:12.5px;
+    padding:9px 10px;
+    border-radius:5px;
+    cursor:pointer;
+    width:100%;
+    letter-spacing:0.01em;
+  }
+  .add-btn:hover{ background:rgba(198,164,103,0.1); }
+
+  /* Cart bar */
+  .cart-bar{
+    position:fixed;
+    bottom:0;left:0;right:0;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    color:var(--text);
+    padding:16px 20px;
+    display:none;
+    align-items:center;
+    justify-content:space-between;
+    cursor:pointer;
+    z-index:20;
+  }
+  .cart-bar.show{display:flex;}
+  .cart-bar .count{
+    color:var(--brass);
+    font-weight:700;
+    margin-right:6px;
+  }
+  .cart-bar .left{display:flex;align-items:center;font-size:14px;font-weight:500;color:var(--muted);}
+  .cart-bar .total{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:17px;
+    color:var(--text);
+  }
+
+  /* Drawer */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.55);
+    display:none;
+    z-index:30;
+  }
+  .overlay.show{display:block;}
+  .drawer{
+    position:fixed;
+    left:0;right:0;bottom:0;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    border-radius:14px 14px 0 0;
+    max-height:82vh;
+    overflow-y:auto;
+    transform:translateY(100%);
+    transition:transform .28s ease;
+    z-index:31;
+    padding:24px;
+  }
+  .drawer.show{transform:translateY(0);}
+  .drawer h2{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:22px;
+    margin:0 0 16px;
+    color:var(--text);
+  }
+  .line-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+    gap:10px;
+  }
+  .line-item .name{font-size:14px;font-weight:500;flex:1;color:var(--text);}
+  .line-item .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .remove{
+    background:none;border:none;color:var(--muted);
+    font-size:12.5px;cursor:pointer;text-decoration:underline;
+  }
+  .remove:hover{color:var(--text);}
+  .subtotal-row{
+    display:flex;justify-content:space-between;
+    align-items:baseline;
+    padding:18px 0 8px;
+  }
+  .subtotal-row span:first-child{font-size:13px;color:var(--muted);}
+  .subtotal-row span:last-child{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:20px;
+    color:var(--brass);
+  }
+  .field{
+    display:block;
+    margin-bottom:14px;
+  }
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:5px;
+  }
+  .field input, .field textarea{
+    width:100%;
+    padding:11px;
+    background:#26222E;
+    border:1px solid var(--line);
+    border-radius:5px;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--text);
+    resize:vertical;
+  }
+  .field input::placeholder, .field textarea::placeholder{ color:#5F5A69; }
+  .field input:focus, .field textarea:focus{
+    outline:none;
+    border-color:var(--brass-dim);
+  }
+  .send-btn{
+    width:100%;
+    background:var(--emerald);
+    color:#F4FBF7;
+    border:none;
+    padding:14px;
+    border-radius:6px;
+    font-size:14.5px;
+    font-weight:600;
+    cursor:pointer;
+    margin-top:8px;
+  }
+  .send-btn:hover{ background:var(--emerald-dim); }
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    padding:44px 0;
+    font-size:14px;
+  }
+  .close-drawer{
+    position:absolute;
+    top:20px;right:20px;
+    border:none;background:none;
+    font-size:18px;cursor:pointer;
+    color:var(--muted);
+  }
+  .close-drawer:hover{ color:var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="store-name">Osu Corner Store</p>
+  <div class="rule"></div>
+  <p class="tagline">Everyday essentials, delivered from your neighbourhood shop</p>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="cart-bar" id="cartBar" onclick="openDrawer()">
+  <div class="left"><span class="count" id="cartCount">0</span> items — view order</div>
+  <div class="total" id="cartTotal">GHS 0.00</div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <button class="close-drawer" onclick="closeDrawer()">✕</button>
+  <h2>Your order</h2>
+  <div id="lineItems"></div>
+  <div id="drawerFooter"></div>
+</div>
+
+<script>
+const WHATSAPP_NUMBER = "233246444393";
+
+const products = [
+  { id:1, name:"Rice, 5kg bag", price:65, emoji:"🍚", bg:"#5C4423" },
+  { id:2, name:"Cooking oil, 1.5L", price:38, emoji:"🫙", bg:"#4B4A22" },
+  { id:3, name:"Detergent powder, 1kg", price:22, emoji:"🧺", bg:"#1F4A4A" },
+  { id:4, name:"Bottled water, 6-pack", price:15, emoji:"💧", bg:"#1F3A52" },
+  { id:5, name:"Sugar, 1kg", price:14, emoji:"🧂", bg:"#5C2F3A" },
+  { id:6, name:"Tissue paper, 4-roll", price:18, emoji:"🧻", bg:"#3E2E52" },
+  { id:7, name:"Milk powder, 400g", price:34, emoji:"🥛", bg:"#33472F" },
+  { id:8, name:"Mobile credit, GHS 10", price:10, emoji:"📱", bg:"#4A1F35" },
+];
+
+let cart = {}; // id -> qty
+
+function qty(id){ return cart[id] || 0; }
+
+function changeQty(id, delta){
+  const next = qty(id) + delta;
+  if(next <= 0){ delete cart[id]; } else { cart[id] = next; }
+  renderGrid();
+  renderCart();
+}
+
+function renderGrid(){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = products.map(p => `
+    <div class="card">
+      <div class="thumb" style="background:${p.bg}">${p.emoji}</div>
+      <h3>${p.name}</h3>
+      <div class="price">GHS ${p.price.toFixed(2)}</div>
+      <div class="qty-row">
+        ${qty(p.id) === 0
+          ? `<button class="add-btn" onclick="changeQty(${p.id},1)">Add to order</button>`
+          : `<div class="stepper">
+               <button onclick="changeQty(${p.id},-1)">–</button>
+               <span>${qty(p.id)}</span>
+               <button onclick="changeQty(${p.id},1)">+</button>
+             </div>`
+        }
+      </div>
+    </div>
+  `).join('');
+}
+
+function cartEntries(){
+  return Object.entries(cart).map(([id, q]) => {
+    const p = products.find(pr => pr.id == id);
+    return { ...p, qty: q, lineTotal: p.price * q };
+  });
+}
+
+function subtotal(){
+  return cartEntries().reduce((sum, e) => sum + e.lineTotal, 0);
+}
+
+function renderCart(){
+  const entries = cartEntries();
+  const bar = document.getElementById('cartBar');
+  const count = entries.reduce((s,e) => s + e.qty, 0);
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('cartTotal').textContent = `GHS ${subtotal().toFixed(2)}`;
+  bar.classList.toggle('show', count > 0);
+
+  const lineItemsEl = document.getElementById('lineItems');
+  const footerEl = document.getElementById('drawerFooter');
+
+  if(entries.length === 0){
+    lineItemsEl.innerHTML = `<div class="empty">Your order is empty. Add a few items to get started.</div>`;
+    footerEl.innerHTML = '';
+    return;
+  }
+
+  lineItemsEl.innerHTML = entries.map(e => `
+    <div class="line-item">
+      <div>
+        <div class="name">${e.name}</div>
+        <div class="sub">${e.qty} × GHS ${e.price.toFixed(2)} = GHS ${e.lineTotal.toFixed(2)}</div>
+      </div>
+      <button class="remove" onclick="changeQty(${e.id}, -${e.qty})">Remove</button>
+    </div>
+  `).join('') + `
+    <div class="subtotal-row"><span>Total</span><span>GHS ${subtotal().toFixed(2)}</span></div>
+  `;
+
+  footerEl.innerHTML = `
+    <div class="field">
+      <label>Your name</label>
+      <input id="custName" type="text" placeholder="e.g. Ama Mensah">
+    </div>
+    <div class="field">
+      <label>Delivery location</label>
+      <input id="custLocation" type="text" placeholder="e.g. East Legon, near the junction">
+    </div>
+    <div class="field">
+      <label>Notes (optional)</label>
+      <textarea id="custNotes" rows="2" placeholder="Any special instructions"></textarea>
+    </div>
+    <button class="send-btn" onclick="sendToWhatsApp()">Send order on WhatsApp</button>
+  `;
+}
+
+function sendToWhatsApp(){
+  const entries = cartEntries();
+  if(entries.length === 0) return;
+
+  const name = document.getElementById('custName').value.trim() || "Not provided";
+  const location = document.getElementById('custLocation').value.trim() || "Not provided";
+  const notes = document.getElementById('custNotes').value.trim();
+
+  let msg = `New order from Osu Corner Store website:\n\n`;
+  entries.forEach(e => {
+    msg += `• ${e.name} — ${e.qty} x GHS ${e.price.toFixed(2)} = GHS ${e.lineTotal.toFixed(2)}\n`;
+  });
+  msg += `\nTotal: GHS ${subtotal().toFixed(2)}\n\n`;
+  msg += `Name: ${name}\n`;
+  msg += `Delivery location: ${location}\n`;
+  if(notes) msg += `Notes: ${notes}\n`;
+
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+function openDrawer(){
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('drawer').classList.add('show');
+}
+function closeDrawer(){
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('drawer').classList.remove('show');
+}
+
+renderGrid();
+renderCart();
+</script>
+
+</body>
+</html>
